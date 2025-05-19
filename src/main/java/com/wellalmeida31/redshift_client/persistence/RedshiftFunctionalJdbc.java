@@ -1,10 +1,11 @@
 package com.wellalmeida31.redshift_client.persistence;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.wellalmeida31.redshift_client.exception.NoStackTraceThrowable;
+import com.wellalmeida31.redshift_client.exception.RedshiftException;
+import com.wellalmeida31.redshift_client.tools.EpochMilliLocalDateTimeDeserializer;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -15,19 +16,17 @@ import org.springframework.data.domain.PageImpl;
 import javax.sql.DataSource;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import static java.util.Objects.requireNonNull;
+import static com.wellalmeida31.redshift_client.tools.SafeTools.supplierElseSafe;
 
 @Component
 @RequiredArgsConstructor
 public class RedshiftFunctionalJdbc {
 
     private final DataSource dataSource;
-
 
     private static final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class, new EpochMilliLocalDateTimeDeserializer()))
@@ -673,25 +672,6 @@ public class RedshiftFunctionalJdbc {
         }
     }
 
-
-    public static class EpochMilliLocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
-
-        private static final List<DateTimeFormatter> FORMATTERS = Arrays.asList(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS"),
-                DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-        );
-
-        @SneakyThrows
-        @Override
-        public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt){
-            for (DateTimeFormatter formatter : FORMATTERS)
-                return LocalDateTime.parse(p.getText(), formatter);
-            throw new UnsupportedOperationException();
-        }
-    }
-
     private static Map<String, Object> resultSetToMap(ResultSet rs) throws SQLException {
         Map<String, Object> map = new LinkedHashMap<>();
         for(int i = 0; i < rs.getMetaData().getColumnCount(); i++){
@@ -748,37 +728,6 @@ public class RedshiftFunctionalJdbc {
                 }
             }
         };
-    }
-
-    public static class NoStackTraceThrowable extends Throwable {
-        public NoStackTraceThrowable(String message) {
-            super(message, (Throwable) null, false, false);
-        }
-    }
-
-    public static class RedshiftException extends RuntimeException {
-        public RedshiftException(String message) {
-            super(message);
-        }
-        public RedshiftException(String message, Throwable throwable) {
-            super(message, throwable);
-        }
-        public RedshiftException(Throwable throwable) {
-            super(throwable);
-        }
-    }
-
-    public static <T> T supplierElseSafe(SQLSupplier<? extends T> supplier, T defaultValue) {
-        var r = runSafe(requireNonNull(supplier, "supplier cannot be null"));
-        return (r != null) ? r : defaultValue;
-    }
-
-    private static <T> T runSafe(SQLSupplier<? extends T> supplier) {
-        try{
-            return supplier.get();
-        } catch (SQLException t) {
-            return null;
-        }
     }
 
     @FunctionalInterface

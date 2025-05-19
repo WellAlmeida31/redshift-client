@@ -9,6 +9,7 @@
 
 ## Table of Contents
 - [Features](#features)
+- [Installation](#installation)
 - [Usage Examples](#usage-examples)
     - [Basic CRUD](#1-basic-crud-operations)
     - [Batch Processing](#2-batch-operations)
@@ -40,4 +41,17 @@
 ✔️ Controle de isolamento de transação  
 ✔️ Proteção de consulta parametrizada  
 ✔️ Manipuladores de sucesso/erro  
+
+## Installation
+- en-US - Common dependencies
+- pt-BR - Dependências comuns
+
+```gradle
+dependencies {
+    implementation 'com.amazon.redshift:redshift-jdbc42:2.1.0.7'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+}
+```
+
+
 
