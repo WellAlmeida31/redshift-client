@@ -1,4 +1,4 @@
-# Redshift Functional JDBC Connector
+# 📘 Redshift Functional JDBC Connector
 
 ![Java](https://img.shields.io/badge/Java-17%2B-blue)
 ![Spring](https://img.shields.io/badge/Spring-Data-red)
@@ -19,7 +19,7 @@
 - [API Reference](#api-reference)
 - [Limitations](#limitations)
 
-## Features
+## Features ✅
 - en-US
 
 ✔️ Fluent builder pattern for all operations  
@@ -42,16 +42,46 @@
 ✔️ Proteção de consulta parametrizada  
 ✔️ Manipuladores de sucesso/erro  
 
-## Installation
+## Installation ⚙️
 - en-US - Common dependencies
 - pt-BR - Dependências comuns
+### Maven
+#### en-US
+Add the basic dependencies to your project's pom.xml:
+- note: redshift-jdbc42 in case of use with AWS Redshift
+#### pt-BR
+Adicione as dependências básicas no pom.xml do seu projeto:
+- obs: redshift-jdbc42 no caso do uso com AWS Redshift 
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
 
-```gradle
+<dependency>
+  <groupId>com.amazon.redshift</groupId>
+  <artifactId>redshift-jdbc42</artifactId>
+  <version>${latest-version}</version>
+</dependency>
+```
+### Gradle (Groovy DSL)
+```groovy
 dependencies {
     implementation 'com.amazon.redshift:redshift-jdbc42:2.1.0.7'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
 ```
+### Gradle (Kotlin DSL)
+```kotlin
+dependencies {
+  implementation("com.amazon.redshift:redshift-jdbc42")
+  implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+}
+```
+## Usage Examples
 
+### 1. Basic CRUD Operations
+#### en-US
 
+- 
 
