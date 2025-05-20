@@ -17,9 +17,10 @@
     - [Materialized Views](#4-materialized-views)
 - [Best Practices](#best-practices)
 - [API Reference](#api-reference)
-- [Limitations](#limitations)
+- [Limitations](#limitations) 
 
-## Features ✅
+## Features
+✅
 - en-US
 
 ✔️ Fluent builder pattern for all operations  
@@ -42,7 +43,8 @@
 ✔️ Proteção de consulta parametrizada  
 ✔️ Manipuladores de sucesso/erro  
 
-## Installation ⚙️
+## Installation
+⚙️
 - en-US - Common dependencies
 - pt-BR - Dependências comuns
 ### Maven
