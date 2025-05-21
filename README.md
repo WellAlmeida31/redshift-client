@@ -108,13 +108,14 @@ public Long createUser(UserDTO user) {
     
     redshiftPool.jdbcUpdate()
         .query("""
-            INSERT INTO users (id, name, email) 
-            VALUES (?, ?, ?)
+            INSERT INTO users (id, name, email, created_at)
+            VALUES (?, ?, ?, ?)
             """)
         .parameters(Arrays.asList(
             id,
             user.getName(),
-            user.getEmail()
+            user.getEmail(),
+            user.getCreatedAt()
         ))
         .onSuccess(rows -> log.info("Created user {}", id))
         .execute();
@@ -122,3 +123,44 @@ public Long createUser(UserDTO user) {
     return id;
 }
 ```
+
+#### en-US - Query with object mapping:
+#### pt-BR - Consulta com mapeamento de classe:
+
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
+public Optional<User> findUser(Long id) {
+    return redshiftPool.jdbcQuery()
+        .query("SELECT * FROM users WHERE id = ?")
+        .parameters(Collections.singletonList(id))
+        .fetchOne(User.class);
+}
+
+@NoArgsConstructor 
+@Getter
+@Setter
+public class User {
+  private Long id;
+  private String name;
+  private String email;
+  @JsonAlias("created_at")
+  private LocalDateTime createdAt;
+}
+```
+
+
+
+
+
+
+
+
+
+## Best Practices
+
+
+## API Reference
+
+
+## Limitations
