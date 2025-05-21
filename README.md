@@ -45,6 +45,16 @@
 
 ## Installation
 ⚙️
+- en-US - Import the library for use:
+- pt-BR - Importe a biblioteca para uso:
+```xml
+<dependency>
+  <groupId>com.wellalmeida31</groupId>
+  <artifactId>redshift-client</artifactId>
+  <version>0.0.1</version>
+</dependency>
+```
+
 - en-US - Common dependencies
 - pt-BR - Dependências comuns
 ### Maven
@@ -83,7 +93,32 @@ dependencies {
 ## Usage Examples
 
 ### 1. Basic CRUD Operations
-#### en-US
+#### en-US - Insert with generated ID:
+AWS Redshift works with many parallel processes, but it cannot return the ID generated in the database through functions like IDENTITY when we try to retrieve the generated ID immediately. Therefore, the best strategy, especially when using Hibernate, would be to generate the ID on the backend side and send it in the insert statements. (This library has classes for safely generating 64-bit and 53-bit Long number IDs)
 
-- 
+#### pt-BR - Insert com ID gerado:
+O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver o id gerados no banco de dados através de funções como IDENTITY quando tentamos recuperar o id gerado imediatamente. Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruões de insert. (Esta biblioteca possui classes para geração segura de IDs numeriros Long de 64 e 53 bits)
 
+- @Autowired or @RequiredArgsConstructor
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
+public Long createUser(UserDTO user) {
+  Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+    
+    redshiftPool.jdbcUpdate()
+        .query("""
+            INSERT INTO users (id, name, email) 
+            VALUES (?, ?, ?)
+            """)
+        .parameters(Arrays.asList(
+            id,
+            user.getName(),
+            user.getEmail()
+        ))
+        .onSuccess(rows -> log.info("Created user {}", id))
+        .execute();
+    
+    return id;
+}
+```
