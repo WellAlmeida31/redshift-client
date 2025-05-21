@@ -125,7 +125,11 @@ public Long createUser(UserDTO user) {
 ```
 
 #### en-US - Query with object mapping:
+Redshift by default does not work case sensitive (It is possible to enable/disable this property), to correctly serialize attributes it is possible to use the @JsonAlias ​​annotation to correctly adapt their names.
+
 #### pt-BR - Consulta com mapeamento de classe:
+O Redshift por padrão não trabalha case sensitive (É possível ativar / desativar esta propriedade), para serializar corretamente atributos é possível usar a anotação @JsonAlias para adequar corretamente os seus nomes
+
 
 ```Java
 private final RedshiftFunctionalJdbc redshiftPool;
