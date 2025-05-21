@@ -118,6 +118,7 @@ public Long createUser(UserDTO user) {
             user.getCreatedAt()
         ))
         .onSuccess(rows -> log.info("Created user {}", id))
+        .onFailure(throwable -> log.error("Insert failed: {}", throwable.getMessage()))
         .execute();
     
     return id;
@@ -138,6 +139,18 @@ public Optional<User> findUser(Long id) {
         .query("SELECT * FROM users WHERE id = ?")
         .parameters(Collections.singletonList(id))
         .fetchOne(User.class);
+}
+
+//Or Implementation with PreparedStatement
+public Optional<User> findUser(Long id) {
+    var query = """
+            SELECT * FROM users WHERE id = ?
+            """;
+    return redshiftPool
+            .jdbcQuery()
+            .query(query)
+            .parameters(ps-> ps.setLong(1, id))//PreparedStatement
+            .fetchOne(User.class);
 }
 
 @NoArgsConstructor 
