@@ -132,6 +132,20 @@ Redshift by default does not work case sensitive (It is possible to enable/disab
 O Redshift por padrão não trabalha case sensitive (É possível ativar / desativar esta propriedade), para serializar corretamente atributos é possível usar a anotação @JsonAlias para adequar corretamente os seus nomes
 
 ```Java
+//Hypothetical class
+@Builder
+@NoArgsConstructor
+@Getter
+@Setter
+public class User {
+  private Long id;
+  private String name;
+  private String email;
+  @JsonAlias("created_at")
+  private LocalDateTime createdAt;
+}
+
+//Query examples
 private final RedshiftFunctionalJdbc redshiftPool;
 
 public Optional<User> findUser(Long id) {
@@ -170,18 +184,11 @@ public Optional<User> findUser(Long id) {
                   .build());
 }
 
-@Builder
-@NoArgsConstructor 
-@Getter
-@Setter
-public class User {
-  private Long id;
-  private String name;
-  private String email;
-  @JsonAlias("created_at")
-  private LocalDateTime createdAt;
-}
+
 ```
+
+[//]: # (Fazer Intruções delete, update, consulta com paginação, materialized view)
+
 
 
 
@@ -192,7 +199,10 @@ public class User {
 
 
 ## Best Practices
-
+### Performance Optimization
+- Batch Size: Use 100-1000 rows per batch for optimal Redshift performance
+- Connection Pooling: Configure your DataSource properly (HikariCP recommended)
+- Column Selection: Always specify columns instead of using SELECT *
 
 ## API Reference
 
