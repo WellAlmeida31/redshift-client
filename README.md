@@ -97,7 +97,7 @@ dependencies {
 AWS Redshift works with many parallel processes, but it cannot return the ID generated in the database through functions like IDENTITY when we try to retrieve the generated ID immediately. Therefore, the best strategy, especially when using Hibernate, would be to generate the ID on the backend side and send it in the insert statements. (This library has classes for safely generating 64-bit and 53-bit Long number IDs. Note: JavaScript frameworks do not correctly display 64-bit Long numbers generated in Java)
 
 #### pt-BR - Insert com ID gerado:
-O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver o id gerados no banco de dados através de funções como IDENTITY quando tentamos recuperar o id gerado imediatamente. Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruões de insert. (Esta biblioteca possui classes para geração segura de IDs numeriros Long de 64 e 53 bits. Obs: Frameworks JavaScript não apresentam corretamente numeros Long 64 bits gerados em Java)
+O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver o id gerados no banco de dados através de funções como IDENTITY quando tentamos recuperar o id gerado imediatamente. Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruções de insert. (Esta biblioteca possui classes para geração segura de IDs numeriros Long de 64 e 53 bits. Obs: Frameworks JavaScript não apresentam corretamente numeros Long 64 bits gerados em Java)
 
 - @Autowired or @RequiredArgsConstructor
 ```Java
@@ -153,6 +153,24 @@ public Optional<User> findUser(Long id) {
             .fetchOne(User.class);
 }
 
+//Or Implementation with ResultSet
+public Optional<User> findUser(Long id) {
+  var query = """
+          SELECT * FROM users WHERE id = ?
+          """;
+  return redshiftPool
+          .jdbcQuery()
+          .query(query)
+          .parameters(ps-> ps.setLong(1, id))//PreparedStatement
+          .fetchOne(rs -> User.builder()
+                  .id(rs.getLong("id"))//ResultSet
+                  .name(rs.getString("name"))//ResultSet
+                  .email(rs.getString("email"))//ResultSet
+                  .createdAt(rs.getString("created_at"))//ResultSet
+                  .build());
+}
+
+@Builder
 @NoArgsConstructor 
 @Getter
 @Setter
