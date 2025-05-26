@@ -158,7 +158,7 @@ public Optional<User> findUser(Long id) {
 //Or Implementation with PreparedStatement
 public Optional<User> findUser(Long id) {
     var query = """
-            SELECT * FROM users WHERE id = ?
+            SELECT id, name, email,created_at FROM users WHERE id = ?
             """;
     return redshiftPool
             .jdbcQuery()
@@ -170,7 +170,11 @@ public Optional<User> findUser(Long id) {
 //Or Implementation with ResultSet
 public Optional<User> findUser(Long id) {
   var query = """
-          SELECT * FROM users WHERE id = ?
+          SELECT
+              id, name, email,created_at
+          FROM
+              users
+          WHERE id = ?
           """;
   return redshiftPool
           .jdbcQuery()
@@ -200,9 +204,24 @@ public Optional<User> findUser(Long id) {
 
 ## Best Practices
 ### Performance Optimization
+#### en-US
 - Batch Size: Use 100-1000 rows per batch for optimal Redshift performance
 - Connection Pooling: Configure your DataSource properly (HikariCP recommended)
 - Column Selection: Always specify columns instead of using SELECT *
+- In DDL statements, create your tables using the correct DISTSTYLE. Use columns that serve as indexes for the DIST KEY type. For small tables or with data that does not change constantly or is repetitive, you can use DISTSTYLE ALL
+- When creating tables, understand that Redshift has a columnar architecture, so avoid too many relationships. If there are relationships, create them by relating the DIST KEY of one Table to the DIST KEY of the other. For SORTKEY, choose columns where the data is usually cardinal and use the SORTKEY column as a where clause or ordering.
+- When creating attributes for your table, choose the ENCODE of each attribute intelligently according to its type and use.
+  Example: for BOOLEAN, choose ENCODE RAW or zstd, for VARCHAR, choose ENCODE lzo, for repetitive data such as enums, choose ENCODE bytedict, for BIGINT, choose ENCODE az64
+
+#### pt-BR
+- Tamanho do Lote: Use de 100 a 1.000 linhas por lote para otimizar o desempenho do Redshift
+- Pool de Conexões: Configure sua Fonte de Dados corretamente (recomenda-se HikariCP)
+- Seleção de Colunas: Sempre especifique colunas em vez de usar SELECT *
+- Nas instruções de DDL, crie suas tabelas com o uso correto do DISTSTYLE. Use colunas que servem como índice para o tipo DIST KEY. Para pequenas tabelas ou com dados que não mudam constantemente ou são repetitivos, pode-se usar DISTSTYLE ALL
+- Na crição de tabelas, entenda que o Redshift tem sua arquitetura colunar, portanto, evite muitos relacionamentos. Caso existam relacionamentos, faça-os relacionando a DIST KEY de uma Tabela com a DIST KEY da outra. Para SORTKEY escolha colunas onde os dados costumam ser cardinais e use a coluna SORTKEY  como clausula where ou ordenação
+- Na criação dos atributos de sua tabela escolha de forma inteligente o ENCODE de cada atributo de acordo com seu tipo e uso.
+  Exemplo: para BOOLEAN prefira ENCODE RAW ou zstd, para VARCHAR prefira ENCODE lzo, para dados repetitivos como enums prefira ENCODE bytedict, BIGINT prefira ENCODE az64
+
 
 ## API Reference
 
