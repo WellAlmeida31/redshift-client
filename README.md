@@ -247,6 +247,31 @@ public Mono<User> findUser(Long id) {
 
 
 ## API Reference
+### Core Methods
 
+| Method	| Description |
+| ------------- | ------------- |
+| **jdbcQuery()** | Creates a SELECT query builder |
+| **jdbcUpdate()** | Creates an INSERT/UPDATE/DELETE builder |
+| **jdbcBatchUpdate()** | Creates a batch operation builder |
+| **jdbcQueryPage()** | Creates a paginated query builder |
+| **jdbcUpdateMv()** | Creates a materialized view operation builder |
+___
+
+### Common Builder Methods
+| Method	                      | Available For	 | Description                           |
+|------------------------------|:--------------:|---------------------------------------|
+| **.query(String)**           |      All       | Sets the SQL query                    |
+| **.parameters(List)**	       |      All       | Sets parameters as ordered list       |
+| **.parameters(SQLConsumer)** |      All       | Sets parameters via PreparedStatement |
+| .onSuccess()                 |  Update/Batch  | Success callback                      |
+| .onFailure()                 |  Update/Batch  | Error callback                        |
+| .pageSize()                  |   QueryPage    | Sets page size                        |                      
+| .pageIndex()                 |   QueryPage    | Sets page number                      |                      
+| .sort()                      |   QueryPage    | Sets sorting criteria                 |                 
+| .batchSize()                 |     Batch      | Sets batch chunk size                 |                 
+| .isolationLevel()            |  Update/Batch  | Sets transaction isolation            |            
+
+___
 
 ## Limitations
