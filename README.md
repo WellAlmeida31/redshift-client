@@ -188,6 +188,29 @@ public Optional<User> findUser(Long id) {
                   .build());
 }
 
+//Or Implementation with Project Reactor (Webflux)
+public Mono<User> findUser(Long id) {
+  var query = """
+          SELECT
+              id, name, email, created_at
+          FROM
+              users
+          WHERE id = ?
+          """;
+
+  return Mono.fromCallable(() -> redshiftPool
+                  .jdbcQuery()
+                  .query(query)
+                  .parameters(ps -> ps.setLong(1, id))
+                  .fetchOne(rs -> User.builder()
+                          .id(rs.getLong("id"))
+                          .name(rs.getString("name"))
+                          .email(rs.getString("email"))
+                          .createdAt(rs.getString("created_at"))
+                          .build()))
+          .flatMap(Mono::justOrEmpty);
+}
+
 
 ```
 
