@@ -63,7 +63,9 @@ Add the basic dependencies to your project's pom.xml:
 - note: redshift-jdbc42 in case of use with AWS Redshift
 #### pt-BR
 Adicione as dependências básicas no pom.xml do seu projeto:
-- obs: redshift-jdbc42 no caso do uso com AWS Redshift 
+
+- obs: redshift-jdbc42 no caso do uso com AWS Redshift
+
 ```xml
 <dependency>
   <groupId>org.springframework.boot</groupId>
@@ -248,7 +250,7 @@ public Mono<User> findUser(Long id) {
 
 ## API Reference
 ### Core Methods
-
+#### en-US
 | Method	| Description |
 | ------------- | ------------- |
 | **jdbcQuery()** | Creates a SELECT query builder |
@@ -270,8 +272,33 @@ ___
 | **.pageIndex()**             |   QueryPage    | Sets page number                      |                      
 | **.sort()**                  |   QueryPage    | Sets sorting criteria                 |                 
 | **.batchSize()**             |     Batch      | Sets batch chunk size                 |                 
-| **.isolationLevel()**        |  Update/Batch  | Sets transaction isolation            |            
+| **.isolationLevel()**        |  Update/Batch  | Sets transaction isolation            |
+___
 
+### Métodos principais
+#### pt-BR
+| Método	               | Descrição                                                    |
+|-----------------------|--------------------------------------------------------------|
+| **jdbcQuery()**       | Cria um construtor de consulta SELECT                        |
+| **jdbcUpdate()**      | Cria um construtor INSERT/UPDATE/DELETE                      |
+| **jdbcBatchUpdate()** | Cria um construtor de operações em lote                      |
+| **jdbcQueryPage()**   | Cria um construtor de consulta paginada                      |
+| **jdbcUpdateMv()**    | Cria um construtor de operação de visualização materializada |
+___
+
+### Métodos comuns de construtor
+| Método	                      | Disponível para	 | Descrição                                |
+|------------------------------|:----------------:|------------------------------------------|
+| **.query(String)**           |      Todos       | Define a consulta SQL                    |
+| **.parameters(List)**	       |      Todos       | Define parâmetros como lista ordenada    |
+| **.parameters(SQLConsumer)** |      Todos       | Define parâmetros via PreparedStatement  |
+| **.onSuccess()**             |   Update/Batch   | Retorno de chamada de sucesso            |
+| **.onFailure()**             |   Update/Batch   | Retorno de chamada de erro               |
+| **.pageSize()**              |    QueryPage     | Define o tamanho da página               |
+| **.pageIndex()**             |    QueryPage     | Define o número da página                |
+| **.sort()**                  |    QueryPage     | Define critérios de classificação        |
+| **.batchSize()**             |      Batch       | Define o tamanho do bloco do lote        |
+| **.isolationLevel()**        |   Update/Batch   | Define o isolamento da transação         |
 ___
 
 ## Limitations
