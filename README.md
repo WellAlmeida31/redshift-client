@@ -264,13 +264,13 @@ ___
 | **.query(String)**           |      All       | Sets the SQL query                    |
 | **.parameters(List)**	       |      All       | Sets parameters as ordered list       |
 | **.parameters(SQLConsumer)** |      All       | Sets parameters via PreparedStatement |
-| .onSuccess()                 |  Update/Batch  | Success callback                      |
-| .onFailure()                 |  Update/Batch  | Error callback                        |
-| .pageSize()                  |   QueryPage    | Sets page size                        |                      
-| .pageIndex()                 |   QueryPage    | Sets page number                      |                      
-| .sort()                      |   QueryPage    | Sets sorting criteria                 |                 
-| .batchSize()                 |     Batch      | Sets batch chunk size                 |                 
-| .isolationLevel()            |  Update/Batch  | Sets transaction isolation            |            
+| **.onSuccess()**             |  Update/Batch  | Success callback                      |
+| **.onFailure()**             |  Update/Batch  | Error callback                        |
+| **.pageSize()**              |   QueryPage    | Sets page size                        |                      
+| **.pageIndex()**             |   QueryPage    | Sets page number                      |                      
+| **.sort()**                  |   QueryPage    | Sets sorting criteria                 |                 
+| **.batchSize()**             |     Batch      | Sets batch chunk size                 |                 
+| **.isolationLevel()**        |  Update/Batch  | Sets transaction isolation            |            
 
 ___
 
