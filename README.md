@@ -351,3 +351,22 @@ ___
 - Máximo de 1000 parâmetros por consulta (limitação do Redshift)
 - Junções complexas podem exigir dicas de consulta
 - Operações JSON exigem conversão explícita (Ver documentação sobre tipos SUPER)
+___
+
+To download this as a file, you can:
+
+1. Copy the entire content above
+2. Save it as `README.md` in your project root
+3. Or use this JavaScript snippet in your browser console to download it:
+
+```javascript
+const content = `[PASTE_THE_ENTIRE_MARKDOWN_HERE]`;
+const blob = new Blob([content], {type: 'text/markdown'});
+const url = URL.createObjectURL(blob);
+const a = document.createElement('a');
+a.href = url;
+a.download = 'README.md';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+```
