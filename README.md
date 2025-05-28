@@ -251,13 +251,13 @@ public Mono<User> findUser(Long id) {
 ## API Reference
 ### Core Methods
 #### en-US
-| Method	| Description |
-| ------------- | ------------- |
-| **jdbcQuery()** | Creates a SELECT query builder |
-| **jdbcUpdate()** | Creates an INSERT/UPDATE/DELETE builder |
-| **jdbcBatchUpdate()** | Creates a batch operation builder |
-| **jdbcQueryPage()** | Creates a paginated query builder |
-| **jdbcUpdateMv()** | Creates a materialized view operation builder |
+| Method                | Description                                   |
+|-----------------------|-----------------------------------------------|
+| **jdbcQuery()**       | Creates a SELECT query builder                |
+| **jdbcUpdate()**      | Creates an INSERT/UPDATE/DELETE builder       |
+| **jdbcBatchUpdate()** | Creates a batch operation builder             |
+| **jdbcQueryPage()**   | Creates a paginated query builder             |
+| **jdbcUpdateMv()**    | Creates a materialized view operation builder |
 ___
 
 ### Common Builder Methods
@@ -273,6 +273,18 @@ ___
 | **.sort()**                  |   QueryPage    | Sets sorting criteria                 |                 
 | **.batchSize()**             |     Batch      | Sets batch chunk size                 |                 
 | **.isolationLevel()**        |  Update/Batch  | Sets transaction isolation            |
+___
+
+### Constructor terminal methods
+| Method	                                |             Available For	              | Description                                                                                                                                                              |
+|----------------------------------------|:---------------------------------------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **.executeQuery(SQLFunction)**         |         JdbcQuery/JdbcQueryPage         | Executes the algorithm defined in the construction steps and maps the attributes one by one with ResultSet                                                               |
+| **.executeQuery(Class<T> clazz)**      |         JdbcQuery/JdbcQueryPage         | Executes the algorithm defined in the construction steps and automatically maps the attributes to the defined class                                                      |
+| **.fetchOne(SQLFunction)**             |                JdbcQuery                | Executes the algorithm defined in the construction steps and maps the attributes one by one with ResultSet returning only one result in Optional<>                       |
+| **.fetchOne(Class<T> clazz)**          |                JdbcQuery                | Executes the algorithm defined in the construction steps and automatically maps the attributes to the defined class returning only one result in Optional<>              |
+| **.executePagedQuery(SQLFunction)**    |              JdbcQueryPage              | Executes the algorithm defined in the construction steps and maps the attributes one by one with ResultSet returning a Page<T> containing the paginated Objects          |
+| **.executePagedQuery(Class<T> clazz)** |              JdbcQueryPage              | Executes the algorithm defined in the construction steps and automatically maps the attributes to the defined class returning a Page<T> containing the paginated Objects |
+| **.execute()**                         | JdbcUpdate/JdbcBatchUpdate/JdbcUpdateMv | Executes the algorithm defined in the construction steps and executes single, batch, or DML statements for Redshift Materialized Views                                   |
 ___
 
 ### Métodos principais
@@ -301,4 +313,41 @@ ___
 | **.isolationLevel()**        |   Update/Batch   | Define o isolamento da transação         |
 ___
 
+### Métodos terminais do construtor
+| Método	                                |            Disponível para	             | Descrição                                                                                                                                                              |
+|----------------------------------------|:---------------------------------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **.executeQuery(SQLFunction)**         |         JdbcQuery/JdbcQueryPage         | Executa o algoritmo definido nas etapas de construção e mapeia um a um os atributos com ResultSet                                                                      |
+| **.executeQuery(Class<T> clazz)**      |         JdbcQuery/JdbcQueryPage         | Executa o algoritmo definido nas etapas de construção e mapeia automaticamente os atributos para a classe definida                                                     |
+| **.fetchOne(SQLFunction)**             |                JdbcQuery                | Executa o algoritmo definido nas etapas de construção e mapeia um a um os atributos com ResultSet devolvendo apenas um resultado em Optional<>                         |
+| **.fetchOne(Class<T> clazz)**          |                JdbcQuery                | Executa o algoritmo definido nas etapas de construção e mapeia automaticamente os atributos para a classe definida devolvendo apenas um resultado em Optional<>        |
+| **.executePagedQuery(SQLFunction)**    |              JdbcQueryPage              | Executa o algoritmo definido nas etapas de construção e mapeia um a um os atributos com ResultSet devolvendo um Page<T> contendo os Objetos paginados                  |
+| **.executePagedQuery(Class<T> clazz)** |              JdbcQueryPage              | Executa o algoritmo definido nas etapas de construção e mapeia automaticamente os atributos para a classe definida devolvendo um Page<T> contendo os Objetos paginados |
+| **.execute()**                         | JdbcUpdate/JdbcBatchUpdate/JdbcUpdateMv | Executa o algoritmo definido nas etapas de construção e executa instruções DML únicas, em lotes ou instruções para Materialized Views Redshift                         |
+
+
 ## Limitations
+
+#### en-US
+### Redshift Compatibility
+- ✖ No support for array data types
+- ✖ No MERGE statement support
+- ✖ Limited transactional support (avoid long-running transactions)
+- ✖ No RETURNING clause in INSERT/UPDATE
+
+### Library Constraints
+- Maximum 1000 parameters per query (Redshift limitation)
+- Complex joins may require query hints
+- JSON operations require explicit casting (See documentation on SUPER types)
+
+### Compatibilidade com Redshift
+
+#### pt-BR
+- ✖ Sem suporte para tipos de dados de array
+- ✖ Sem suporte para instruções MERGE
+- ✖ Suporte transacional limitado (evita transações de longa duração)
+- ✖ Sem cláusula RETURNING em INSERT/UPDATE
+
+### Restrições da biblioteca
+- Máximo de 1000 parâmetros por consulta (limitação do Redshift)
+- Junções complexas podem exigir dicas de consulta
+- Operações JSON exigem conversão explícita (Ver documentação sobre tipos SUPER)
