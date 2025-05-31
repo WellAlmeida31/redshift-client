@@ -96,10 +96,10 @@ dependencies {
 
 ### 1. Basic CRUD Operations
 #### en-US - Insert with generated ID:
-AWS Redshift works with many parallel processes, but it cannot return the ID generated in the database through functions like IDENTITY when we try to retrieve the generated ID immediately. Therefore, the best strategy, especially when using Hibernate, would be to generate the ID on the backend side and send it in the insert statements. (This library has classes for safely generating 64-bit and 53-bit Long number IDs. Note: JavaScript frameworks do not correctly display 64-bit Long numbers generated in Java)
+AWS Redshift works with many parallel processes, but it cannot immediately return the automatically generated ID in the database through functions such as IDENTITY. Therefore, the best strategy, especially when using Hibernate, would be to generate the ID on the backend side and send it in the insert statements. (This library has classes for safely generating 64-bit and 53-bit Long numeric IDs. Note: JavaScript frameworks do not correctly display 64-bit Long numbers on the screen)
 
 #### pt-BR - Insert com ID gerado:
-O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver o id gerados no banco de dados através de funções como IDENTITY quando tentamos recuperar o id gerado imediatamente. Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruções de insert. (Esta biblioteca possui classes para geração segura de IDs numeriros Long de 64 e 53 bits. Obs: Frameworks JavaScript não apresentam corretamente numeros Long 64 bits gerados em Java)
+O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver imediatamente o id gerado automaticamente no banco de dados através de funções como IDENTITY. Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruções de insert. (Esta biblioteca possui classes para geração segura de IDs numéricos Long de 64 e 53 bits. Obs: Frameworks JavaScript não apresentam corretamente em tela números Long 64 bits)
 
 - @Autowired or @RequiredArgsConstructor
 ```Java
@@ -125,6 +125,43 @@ public Long createUser(UserDTO user) {
     
     return id;
 }
+```
+#### en-US
+- Insert returning the entity reference (Object-Entity) for lazy access
+#### pt-BR
+- Insert retornando a referencia da entidade (Object-Entity) para acesso lazy
+
+```Java
+import org.springframework.transaction.annotation.Transactional;
+
+private final RedshiftFunctionalJdbc redshiftPool;
+@PersistenceContext
+private EntityManager entityManager;
+
+@Transactional
+public User createUser(UserDTO user) {
+  Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+
+  redshiftPool.jdbcUpdate()
+          .query("""
+                  INSERT INTO users (id, name, email, created_at)
+                  VALUES (?, ?, ?, ?)
+                  """)
+          .parameters(ps ->{ //preparedStatement
+                    ps.setLong(1, id);
+                    ps.setString(2, user.getName());
+                    ps.setString(3, user.getEmail());
+                    ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
+                  }
+          )
+          .onSuccess(rows -> log.info("Created user {}", id))
+          .onFailure(throwable -> log.error("Insert failed: {}", throwable.getMessage()))
+          .execute();
+
+  return entityManager.getReferene(User.class, id);
+}
+
+
 ```
 
 #### en-US - Query with object mapping:
