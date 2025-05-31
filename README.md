@@ -106,7 +106,7 @@ O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolv
 private final RedshiftFunctionalJdbc redshiftPool;
 
 public Long createUser(UserDTO user) {
-  Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+  Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);//53-bit numeric id generator
     
     redshiftPool.jdbcUpdate()
         .query("""
@@ -169,12 +169,12 @@ Operações com delete.
 private final RedshiftFunctionalJdbc redshiftPool;
 
 public void deleteItemsFromOrder(Long orderId) {
-  String deleteSkus = "DELETE FROM item WHERE order_id = ?";
+  String deleteItems = "DELETE FROM item WHERE order_id = ?";
 
   redshiftPool
           .jdbcUpdate()
-          .query(deleteSkus)
-          .parameters(ps -> ps.setLong(1, operatorCampaignId))
+          .query(deleteItems)
+          .parameters(ps -> ps.setLong(1, orderId))
           .onSuccess(rows -> log.info("Deleted items, modified {} records", rows))
           .execute();
 }
