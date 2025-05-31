@@ -45,8 +45,8 @@
 
 ## Installation
 ⚙️
-- en-US - Import the library for use:
-- pt-BR - Importe a biblioteca para uso:
+- en-US - Import this library for use in your spring boot project:
+- pt-BR - Importe esta biblioteca para uso em seu projeto spring boot:
 ```xml
 <dependency>
   <groupId>com.wellalmeida31</groupId>
