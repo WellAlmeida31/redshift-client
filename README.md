@@ -160,8 +160,24 @@ public User createUser(UserDTO user) {
 
   return entityManager.getReferene(User.class, id);
 }
+```
+#### en-US - Delete
+Delete operations
+#### pt-BR - Delete
+Operações com delete. 
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
 
+public void deleteItemsFromOrder(Long orderId) {
+  String deleteSkus = "DELETE FROM item WHERE order_id = ?";
 
+  redshiftPool
+          .jdbcUpdate()
+          .query(deleteSkus)
+          .parameters(ps -> ps.setLong(1, operatorCampaignId))
+          .onSuccess(rows -> log.info("Deleted items, modified {} records", rows))
+          .execute();
+}
 ```
 
 #### en-US - Query with object mapping:
