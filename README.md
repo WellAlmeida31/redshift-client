@@ -351,19 +351,19 @@ ___
 | **jdbcUpdateMv()**    | Cria um construtor de operação de visualização materializada |
 ___
 
-### Métodos comuns de construtor
-| Método	                      | Disponível para	 | Descrição                                |
-|------------------------------|:----------------:|------------------------------------------|
-| **.query(String)**           |      Todos       | Define a consulta SQL                    |
-| **.parameters(List)**	       |      Todos       | Define parâmetros como lista ordenada    |
-| **.parameters(SQLConsumer)** |      Todos       | Define parâmetros via PreparedStatement  |
-| **.onSuccess()**             |   Update/Batch   | Retorno de chamada de sucesso            |
-| **.onFailure()**             |   Update/Batch   | Retorno de chamada de erro               |
-| **.pageSize()**              |    QueryPage     | Define o tamanho da página               |
-| **.pageIndex()**             |    QueryPage     | Define o número da página                |
-| **.sort()**                  |    QueryPage     | Define critérios de classificação        |
-| **.batchSize()**             |      Batch       | Define o tamanho do bloco do lote        |
-| **.isolationLevel()**        |   Update/Batch   | Define o isolamento da transação         |
+### Métodos comuns do construtor
+| Método	                      | Disponível para	 | Descrição                               |
+|------------------------------|:----------------:|-----------------------------------------|
+| **.query(String)**           |      Todos       | Define a instrução SQL                  |
+| **.parameters(List)**	       |      Todos       | Define parâmetros como lista ordenada   |
+| **.parameters(SQLConsumer)** |      Todos       | Define parâmetros via PreparedStatement |
+| **.onSuccess()**             |   Update/Batch   | Retorno de chamada de sucesso           |
+| **.onFailure()**             |   Update/Batch   | Retorno de chamada de erro              |
+| **.pageSize()**              |    QueryPage     | Define o tamanho da página              |
+| **.pageIndex()**             |    QueryPage     | Define o número da página               |
+| **.sort()**                  |    QueryPage     | Define critérios de classificação       |
+| **.batchSize()**             |      Batch       | Define o tamanho do bloco do lote       |
+| **.isolationLevel()**        |   Update/Batch   | Define o isolamento da transação        |
 ___
 
 ### Métodos terminais do construtor
