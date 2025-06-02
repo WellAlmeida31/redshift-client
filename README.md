@@ -227,6 +227,7 @@ public void insertItemsBatch(Long orderId, List<Item> items){
           .execute();
 }
 ```
+___
 
 #### en-US - Query with object mapping:
 Redshift by default does not work case sensitive (It is possible to enable/disable this property), to correctly serialize attributes it is possible to use the @JsonAlias ​​annotation to correctly adapt their names.
