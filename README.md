@@ -228,6 +228,51 @@ public void insertItemsBatch(Long orderId, List<Item> items){
 }
 ```
 ___
+#### en-US - Example of chained operations with delete and batch update using Project Reactor.
+
+#### pt-BR - Exemplo de operações encadeadas com delete e update em lote usando Project Reactor.
+
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
+public Mono<Void> deleteItemsFromOrderAndAdd(Long orderId, List<Item> items) {
+
+  String deleteItems = "DELETE FROM item WHERE order_id = ?";
+
+  return Mono.fromRunnable(() -> redshiftPool
+                  .jdbcUpdate()
+                  .query(deleteItems)
+                  .onSuccess(rows -> log.info("Deleted items for update, modified {} records", rows))
+                  .onFailure(throwable -> log.error("Batch insert items failed: {}", throwable.getMessage()))
+                  .parameters(ps -> ps.setLong(1, orderId))
+                  .execute())
+          .then(Mono.defer(() -> {
+            if (items.isEmpty()) return Mono.empty();
+
+            String query = "INSERT INTO item (id, description, name, orderId) VALUES(?, ?, ?, ?);";
+            RedshiftFunctionalJdbc.JdbcBatchUpdate batchUpdate = redshiftPool.jdbcBatchUpdate().query(query);
+
+            items.forEach(item -> {
+              Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+              batchUpdate.addBatchParameters(Arrays.asList(
+                      id,
+                      item.getDescription(),
+                      item.getName(),
+                      orderId
+              ));
+            });
+
+            return Mono.fromRunnable(() -> batchUpdate
+                    .isolationLevel(Connection.TRANSACTION_READ_COMMITTED)
+                    .batchSize(items.size())
+                    .onSuccess(rows -> log.info("Batch insert items executed, inserted {} records", rows.length))
+                    .onFailure(throwable -> log.error("Batch insert items failed: {}", throwable.getMessage()))
+                    .execute()
+            );
+          }));
+}
+
+```
 
 #### en-US - Query with object mapping:
 Redshift by default does not work case sensitive (It is possible to enable/disable this property), to correctly serialize attributes it is possible to use the @JsonAlias ​​annotation to correctly adapt their names.
