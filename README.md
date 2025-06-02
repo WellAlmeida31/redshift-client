@@ -126,6 +126,7 @@ public Long createUser(UserDTO user) {
     return id;
 }
 ```
+___
 #### en-US
 - Insert returning the entity reference (Object-Entity) for lazy access
 #### pt-BR
@@ -161,6 +162,7 @@ public User createUser(UserDTO user) {
   return entityManager.getReferene(User.class, id);
 }
 ```
+___
 #### en-US - Delete
 Delete operations
 #### pt-BR - Delete
@@ -176,6 +178,52 @@ public void deleteItemsFromOrder(Long orderId) {
           .query(deleteItems)
           .parameters(ps -> ps.setLong(1, orderId))
           .onSuccess(rows -> log.info("Deleted items, modified {} records", rows))
+          .execute();
+}
+```
+___
+#### en-US - Example of chained operations with delete and batch update.
+
+#### pt-BR - Exemplo de operações encadeadas com delete e update em lote.
+
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
+public void deleteItemsFromOrderAndAdd(Long orderId, List<Item> items) {
+  String deleteItems = "DELETE FROM item WHERE order_id = ?";
+
+  redshiftPool
+          .jdbcUpdate()
+          .query(deleteItems)
+          .parameters(ps -> ps.setLong(1, orderId))
+          .onSuccess(rows -> {
+              log.info("Deleted items, modified {} records", rows);
+              insertItemsBatch(orderId, items);
+          })
+          .onFailure(throwable -> log.error("Deleted items failed: {}", throwable.getMessage()))
+          .execute();
+}
+
+public void insertItemsBatch(Long orderId, List<Item> items){
+  if (items.isEmpty()) return;
+
+  String query = "INSERT INTO item (id, description, name, orderId) VALUES(?, ?, ?, ?);";
+  RedshiftFunctionalJdbc.JdbcBatchUpdate batchUpdate = redshiftPool.jdbcBatchUpdate().query(query);
+
+  items.forEach(item -> {
+    Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+    batchUpdate.addBatchParameters(Arrays.asList(
+            id,
+            item.getDescription(),
+            item.getName(),
+            orderId
+    ));
+  });
+  batchUpdate
+          .isolationLevel(Connection.TRANSACTION_READ_COMMITTED)
+          .batchSize(items.size())
+          .onSuccess(rows -> log.info("Batch insert items executed, inserted {} records", rows.length))
+          .onFailure(throwable -> log.error("Batch insert items failed: {}", throwable.getMessage()))
           .execute();
 }
 ```
