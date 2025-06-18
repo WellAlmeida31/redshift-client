@@ -106,7 +106,7 @@ O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolv
 private final RedshiftFunctionalJdbc redshiftPool;
 
 public Long createUser(UserDTO user) {
-  Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);//53-bit numeric id generator
+  Long id = new IdGeneratorThreadSafe().generate();//53-bit numeric id generator
     
     redshiftPool.jdbcUpdate()
         .query("""
@@ -141,7 +141,7 @@ private EntityManager entityManager;
 
 @Transactional
 public User createUser(UserDTO user) {
-  Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+  Long id = new IdGeneratorThreadSafe().generate();
 
   redshiftPool.jdbcUpdate()
           .query("""
@@ -211,7 +211,7 @@ public void insertItemsBatch(Long orderId, List<Item> items){
   RedshiftFunctionalJdbc.JdbcBatchUpdate batchUpdate = redshiftPool.jdbcBatchUpdate().query(query);
 
   items.forEach(item -> {
-    Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+    Long id = new IdGeneratorThreadSafe().generate();
     batchUpdate.addBatchParameters(Arrays.asList(
             id,
             item.getDescription(),
@@ -253,7 +253,7 @@ public Mono<Void> deleteItemsFromOrderAndAdd(Long orderId, List<Item> items) {
             RedshiftFunctionalJdbc.JdbcBatchUpdate batchUpdate = redshiftPool.jdbcBatchUpdate().query(query);
 
             items.forEach(item -> {
-              Long id = (Long) new IdGeneratorThreadSafe().generate(null, null);
+              Long id = new IdGeneratorThreadSafe().generate();
               batchUpdate.addBatchParameters(Arrays.asList(
                       id,
                       item.getDescription(),

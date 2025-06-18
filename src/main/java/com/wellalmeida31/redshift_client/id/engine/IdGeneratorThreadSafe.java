@@ -80,6 +80,11 @@ public class IdGeneratorThreadSafe implements IdentifierGenerator {
         return Math.abs(randomPart);
     }
 
+    public Long generate() {
+        return (Long) this.generate(null, null);
+    }
+
+
     /**
      * Gera um número aleatório de até 53 bits em formato <code>long</code>.
      *
