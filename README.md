@@ -362,6 +362,63 @@ public Mono<User> findUser(Long id) {
 
 
 ```
+#### en-US - Query find All:
+Search all query, with automatic mapping or with ResultSet
+
+#### pt-BR - Consultar todos:
+Consulta do tipo buscar todos, com mapeamento automático ou com ResultSet
+
+```Java
+//Hypothetical class
+@Builder
+@NoArgsConstructor
+@Getter
+@Setter
+public class User {
+  private Long id;
+  private String name;
+  private String email;
+  @JsonAlias("created_at")
+  private LocalDateTime createdAt;
+}
+
+private final RedshiftFunctionalJdbc redshiftPool;
+
+
+public List<User> findAllUsers() {
+  var query = """
+          SELECT id, name, email, created_at FROM users
+          """;
+  return redshiftPool
+          .jdbcQuery()
+          .query(query)
+          .executeQuery(User.class);
+}
+
+public List<User> findUsersByIds(List<Long> userIds) {
+  var idList = userIds.stream()
+          .map(String::valueOf)
+          .collect(Collectors.joining(","));
+    
+  var query = """
+          SELECT
+              id, name, email, created_at
+          FROM
+              users
+          WHERE id in (%s)
+          """.formatted(idList);
+  
+  return redshiftPool
+          .jdbcQuery()
+          .query(query)
+          .executeQuery(rs -> User.builder()
+                  .id(rs.getLong("id"))//ResultSet
+                  .name(rs.getString("name"))//ResultSet
+                  .email(rs.getString("email"))//ResultSet
+                  .createdAt(rs.getString("created_at"))//ResultSet
+                  .build());
+}
+```
 
 [//]: # (Fazer Intruções delete, update, consulta com paginação, materialized view)
 
