@@ -242,9 +242,9 @@ public Mono<Void> deleteItemsFromOrderAndAdd(Long orderId, List<Item> items) {
   return Mono.fromRunnable(() -> redshiftPool
                   .jdbcUpdate()
                   .query(deleteItems)
+                  .parameters(ps -> ps.setLong(1, orderId))
                   .onSuccess(rows -> log.info("Deleted items for update, modified {} records", rows))
                   .onFailure(throwable -> log.error("Batch insert items failed: {}", throwable.getMessage()))
-                  .parameters(ps -> ps.setLong(1, orderId))
                   .execute())
           .then(Mono.defer(() -> {
             if (items.isEmpty()) return Mono.empty();
@@ -517,3 +517,28 @@ document.body.appendChild(a);
 a.click();
 document.body.removeChild(a);
 ```
+
+## 📄 Licença
+
+Software Open Source. Código aberto para comunidade Java.
+O presente código foi testado primorosamente e manteve-se útil à sua finalidade em produção, sendo utilizado em grandes projetos com AWS Redshift.
+---
+Projeto segue a licença de Código Aberto Apache License, Version 2.0
+
+```text
+  Copyright 2025 Well Soft Tecnologia LTDA
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+```
+http://www.apache.org/licenses/LICENSE-2.0
+
+---
