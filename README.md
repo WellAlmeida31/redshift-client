@@ -422,14 +422,16 @@ public List<User> findUsersByIds(List<Long> userIds) {
 
 [//]: # (Fazer Intruções delete, update, consulta com paginação, materialized view)
 
+### 2-batch-operations
 
 
 
 
+### 3-paginated-queries
 
 
 
-
+### 4-materialized-views
 
 ## Best Practices
 ### Performance Optimization
