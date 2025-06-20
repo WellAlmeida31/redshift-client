@@ -848,6 +848,30 @@ public List<logSales> findLogsByItem(String item){
 }
 ```
 
+## Apoio para sua configuração Spring boot com Redshift
+
+- Caso tenha problemas de conexão com o banco Redshift, usando o driver do postgres, por exemplo, isso pode acontecer visto que o Redshift baseia a sua estrutura em postgres, mas não é 100% compatível com o mesmo. Nesse caso, adicione uma classe de dialeto onde possa reescrever métodos de verificação que ocasionam erros, exemplo:
+```Java
+import org.hibernate.dialect.PostgreSQLDialect;
+
+public class RedShiftDialect extends PostgreSQLDialect {
+    @Override
+    public String getQuerySequencesString() {
+        return "Select 1 as sequence_catalog,1 as sequence_schema,1 as sequence_name,"
+                + "1 as data_type,1 as numeric_precision,1 as numeric_precision_redix,"
+                + "1 as numeric_scale,1 as start_value,1 as minimum_value,"
+                + "1 as maximum_value,1 as increment,1 as cycle_option";
+    }
+}
+```
+- Defina a conexão jdbc com o Redshift (Redshift não é compatível o driver reativo R2DBC):
+```properties
+### RedShift
+spring.datasource.url=jdbc:redshift://${DATABASE_HOST:localhost}:${DATABASE_PORT:5439}/${DATABASE_NAME:data}
+spring.jpa.properties.hibernate.dialect=com.myproject.config.RedShiftDialect
+spring.datasource.driver-class-name=com.amazon.redshift.jdbc.Driver
+```
+
 ## Best Practices
 ### Performance Optimization
 #### en-US
