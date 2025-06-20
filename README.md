@@ -370,17 +370,25 @@ Consulta do tipo buscar todos, com mapeamento automático ou com ResultSet
 
 ```Java
 //Hypothetical class
+@Entity
 @Builder
 @NoArgsConstructor
 @Getter
 @Setter
+@Table(name = "user")
 public class User {
+  @Id
+  @GeneratedValue(generator = "id-generator")
+  @GenericGenerator(name = "id-generator", type = IdGeneratorThreadSafe.class)
   private Long id;
   private String name;
   private String email;
   @JsonAlias("created_at")
+  @Column(name = "created_at")
   private LocalDateTime createdAt;
 }
+
+//..service
 
 private final RedshiftFunctionalJdbc redshiftPool;
 
@@ -620,6 +628,8 @@ public Page<Catalog> getCatalogPage(Long orderId, Integer pageSize, Integer page
 #### en-US - Pagination with filters
 #### pt-BR - Paginação com filtros
 
+- Lembrando que o campo created_at pode ser uma SORTKEY, isso irá garantir que os dados sejam ordenados conforme forem inseridos.
+
 ```Java
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -670,12 +680,68 @@ Integer pageSize, Integer pageIndex) {
           .sort(Sort.by("created_at").descending())
           .executePagedQuery(Catalog.class);
 }
-
 ```
 
-
 ### 4-materialized-views
+#### en-US
+A materialized view is a database object that stores pre-computed query results in a materialized (persistent) dataset. This reduces the time required for expensive or lengthy queries. Joins and aggregations can be pre-computed, which makes materialized views a great performance strategy.
+#### pt-BR
+Uma visão materializada é um objeto de banco de dados que armazena resultados de consultas pré-computados em um conjunto de dados materializado (persistente). Isso reduz o tempo de consultas custosas ou de longos processamentos. Junções e agregações podem ser previamente calculados, o que permite a visão materializada ser uma ótima estratégia de performance.
 
+- Existem várias estratégias de performance no Redshift, desde diststyle, materialized views, cache etc...
+- Ativar cache de resultados:
+```sql
+SET enable_result_cache_for_session TO ON;
+```
+
+- Criação de materialized-views (Exemplo de query para consulta de vendas diárias):
+```sql
+CREATE MATERIALIZED VIEW mv_daily_sales
+AS
+SELECT
+    o.order_date AS order_date,
+    SUM(i.price) AS price_total
+FROM order o
+    INNER JOIN item i
+        ON o.orderkey = i.orderkey
+WHERE o.order_date >= '1997-01-01'
+AND   o.order_date < '1998-01-01'
+GROUP BY o.order_date;
+```
+- Atualização de materialized-views:
+```Java
+//...Service
+private final RedshiftFunctionalJdbc redshiftPool;
+
+//...Method
+public void updateMv(){
+  redshiftPool
+          .jdbcUpdateMv()
+          .query("REFRESH MATERIALIZED VIEW mv_daily_sales")
+          .onSuccess(rows -> log.info("Success update materialized view"))
+          .onFailure(throwable -> log.error("Failed update materialized view with error: {}", throwable.getMessage()))
+          .execute(); 
+}
+```
+
+- Atualização materialized-view após um evento confirmado de venda:
+- Obs: Ao atualizar uma materialized-view via código, certifique-se que apenas uma instância da sua aplicação está executando o REFRESH MATERIALIZED VIEW. Execuções simultâneas podem gerar lentidão e aumentar desnecessáriamente o consumo de recursos do redshift. Para garantir que apenas uma instância execute é possível usar ShedLock.
+```Java
+public void handleUpdateMaterializedView(String mvName){
+        log.info("Update Materialized View event received: {}", mvName);
+
+        var updateMv = """
+                REFRESH MATERIALIZED VIEW %s
+                """.formatted(mvName);
+
+        redshiftPool
+                .jdbcUpdateMv()
+                .query(updateMv)
+                .onSuccess(rows -> log.info("Success update materialized view"))
+                .onFailure(throwable -> log.error("Failed update materialized view with error: {}", throwable.getMessage()))
+                .execute();
+    }
+```
 
 
 ## Best Practices
