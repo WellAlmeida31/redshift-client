@@ -32,7 +32,7 @@ public class RedshiftFunctionalJdbc {
             .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class, new EpochMilliLocalDateTimeDeserializer()))
             .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,  false);
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final Pattern SQL_DML_PATTERN = Pattern.compile("^(?i)(SELECT|INSERT|UPDATE|DELETE)\\s+.*", Pattern.DOTALL);
     private static final String[] UNSUPPORTED_PATTERNS = {

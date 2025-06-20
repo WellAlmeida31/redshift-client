@@ -420,7 +420,7 @@ public List<User> findUsersByIds(List<Long> userIds) {
 }
 ```
 
-[//]: # (Fazer Intruções delete, update, consulta com paginação, materialized view)
+[//]: # (Fazer Intruções delete, update, consulta com paginação, materialized view, exemplos com tipo SUPER)
 
 ### 2-batch-operations
 
@@ -470,7 +470,154 @@ public void insertItemsBatch(Long orderId, List<Item> items){
 
 ### 3-paginated-queries
 
+#### en-US - Pagination in general
+Redshift is an analytical database and is not optimized for conventional paging operations. Many operations with OFFSET, for example, would perform a complete scan to the desired point, making the query inefficient for large amounts of data.
+Due to this characteristic, statements with FETCH FIRST, ROWS ONLY, OFFSET and ROWS do not work in Redshift. Pagination with Hibernate/JPA in Spring Boot uses these functions natively and, therefore, presents an error in Redshift. One way to mitigate this would be to use only LIMIT with OFFSET. This API already has a very efficient form of pagination, we will see an example:
 
+#### pt-BR - Paginação de modo geral
+Redshift é um banco analítico e não foi otimizado para operações de paginação convencionais. Muitas opereções com OFFSET, por exemplo, fariam uma varredura completa até o ponto desejado, tornando a consulta ineficiente para muitos dados.
+Devido essa característica, instruções com FETCH FIRST, ROWS ONLY, OFFSET e ROWS não funcionam no Redshift. A paginação com Hibernate/JPA no Spring Boot utiliza, de forma nativa, estas funções e, portanto, apresentam erro no Redshift. Uma forma de mitigar isto seria usando apenas LIMIT com OFFSET. Esta API já possui uma forma de paginação muito eficiente, veremos um exemplo:
+
+- Exemplo usando jakarta.persistence
+- Considerar esta entidade para os próximos exemplos sobre paginação
+
+```Java
+//Hypothetical entity
+@Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Table(name = "catalog")
+public class Catalog {
+
+  @Id
+  @GeneratedValue(generator = "id-generator")
+  @GenericGenerator(name = "id-generator", type = IdGeneratorThreadSafe.class)
+  private Long id;
+
+  @JsonAlias("order_date")
+  @Column(name = "order_date")
+  private OffsetDateTime orderDate;
+
+  @JsonAlias("order_completion_date")
+  @Column(name = "order_completion_date")
+  private OffsetDateTime orderCompletionDate;
+
+  @Column(name = "identification")
+  private String identification;
+  
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JoinColumn(name="order_id", nullable = false)
+  private Order order;
+
+  @JsonAlias("updated_at") //For correct serialization of the attribute coming from Redshift
+  @Column(name = "updated_at")
+  private OffsetDateTime updatedAt;
+
+  @JsonAlias("created_at")
+  @Column(name = "created_at")
+  private OffsetDateTime createdAt;
+
+  @PrePersist
+  private void prePersist(){
+    createdAt = OffsetDateTime.now();
+  }
+
+  @PreUpdate
+  private void preUpdate(){
+    updatedAt = OffsetDateTime.now();
+  }
+}
+```
+#### en-US - Simple pagination with automatic mapping
+#### pt-BR - Paginação simples com mapeamento automático
+
+```Java
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+
+//... Service Class
+
+private final RedshiftFunctionalJdbc redshiftPool;
+
+public Page<Catalog> getCatalogPage(Long orderId, Integer pageSize, Integer pageIndex) {
+    var pagedQuery = """
+            select
+                c.order_id,
+                c.created_at,
+                c.updated_at
+                c.order_completion_date,
+                c.order_date,
+                c.identification
+            from
+                catalog c
+            where
+                c.order_id=?
+            """;
+    
+    return redshiftPool
+            .jdbcQueryPage()
+            .query(pagedQuery)
+            .parameters(ps -> ps.setLong(1, orderId))
+            .pageSize(pageSize)
+            .pageIndex(pageIndex)
+            .sort(Sort.by("created_at").descending())
+            .executePagedQuery(Catalog.class);
+}
+```
+#### en-US - Pagination with manual mapping and entity reference
+#### pt-BR - Paginação com mapeamento manual e referência de entidade
+
+- Use o mapeamento manual quando necessitar implementar uma lógica específica na montagem do objeto retornado.
+- A serialização automática desta API já possui tratamento para nulos, datas, camel case e propriedades vazias.
+
+```Java
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+
+//... Service Class
+
+private final RedshiftFunctionalJdbc redshiftPool;
+
+@PersistenceContext
+private EntityManager entityManager;
+
+public Page<Catalog> getCatalogPage(Long orderId, Integer pageSize, Integer pageIndex) {
+    var pagedQuery = """
+            select
+                c.id,
+                c.order_id,
+                c.created_at,
+                c.updated_at
+                c.order_completion_date,
+                c.order_date,
+                c.identification
+            from
+                catalog c
+            where
+                c.order_id=?
+            """;
+    
+    return redshiftPool
+            .jdbcQueryPage()
+            .query(pagedQuery)
+            .parameters(ps -> ps.setLong(1, orderId))
+            .pageSize(pageSize)
+            .pageIndex(pageIndex)
+            .sort(Sort.by("created_at").descending())
+            .executePagedQuery(rs -> Catalog.builder()
+                    .Order(entityManager.getReference(Order.class, rs.getLong("order_id")))
+                    .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+                    .updatedAt(Optional.ofNullable(rs.getTimestamp("updated_at")).map(Timestamp::toLocalDateTime).orElse(null))
+                    .orderDate(rs.getTimestamp("order_date").toLocalDateTime())
+                    .id(rs.getLong("id"))
+                    .identification(rs.getString("identification"))
+                    .action(Action.valueOf(rs.getString("action")))
+                    .build());
+}
+```
 
 ### 4-materialized-views
 
