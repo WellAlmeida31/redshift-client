@@ -614,7 +614,6 @@ public Page<Catalog> getCatalogPage(Long orderId, Integer pageSize, Integer page
                     .orderDate(rs.getTimestamp("order_date").toLocalDateTime())
                     .id(rs.getLong("id"))
                     .identification(rs.getString("identification"))
-                    .action(Action.valueOf(rs.getString("action")))
                     .build());
 }
 ```
