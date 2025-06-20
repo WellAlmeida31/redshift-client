@@ -198,7 +198,7 @@ public void deleteItemsFromOrderAndAdd(Long orderId, List<Item> items) {
           .parameters(ps -> ps.setLong(1, orderId))
           .onSuccess(rows -> {
               log.info("Deleted items, modified {} records", rows);
-              insertItemsBatch(orderId, items);
+              insertItemsBatch(orderId, items);  //if successful, call the insertItemsBatch method
           })
           .onFailure(throwable -> log.error("Deleted items failed: {}", throwable.getMessage()))
           .execute();
@@ -424,14 +424,57 @@ public List<User> findUsersByIds(List<Long> userIds) {
 
 ### 2-batch-operations
 
+#### en-US - General approach to batch operations:
+Redshift performs better when reading than when writing. For high loads, whenever possible, it is better to use COPY instead of INSERT.
+In batch operations, if it is really necessary, remember to define a coherent SORTKEY and use an efficient DIST STYLE strategy.
+Redshift executes operations in parallel and, therefore, the COPY command is usually more efficient.
+In general, we can define an isolation level and a value for the batch.
+Do not use batches greater than 2000, remember that for simultaneous operations isolation can lead to errors.
+
+#### pt-BR - Abordagem geral das operações em lotes:
+O desempenho do Redshift é melhor na leitura do que na escrita. Para cargas altas, sempre que possível, é bom usar o COPY ao invés do INSERT.
+Nas operações em lotes, se for realmente necessário, lembre-se de definir uma SORTKEY coerente e utilize uma estratégia eficiente de DIST STYLE.
+O Redshift executa operações em paralelo e, portanto, o comando COPY costuma ser mais eficiente.
+De modo geral podemos definir um nível de isolamento e um valor para o lote.
+Não utilize lotes superiores a 2000, lembre-se que para operações simultâneas o isolamento pode levar a erros.
 
 
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
+private static final int BATCH_SIZE = 500;
+
+public void insertItemsBatch(Long orderId, List<Item> items){
+  if (items.isEmpty()) return;
+
+  String query = "INSERT INTO item (id, description, name, orderId) VALUES(?, ?, ?, ?);";
+  RedshiftFunctionalJdbc.JdbcBatchUpdate batchUpdate = redshiftPool.jdbcBatchUpdate().query(query);
+
+  items.forEach(item -> {
+    Long id = new IdGeneratorThreadSafe().generate();
+    batchUpdate.addBatchParameters(Arrays.asList(
+            id,
+            item.getDescription(),
+            item.getName(),
+            orderId
+    ));
+  });
+  batchUpdate
+          .isolationLevel(Connection.TRANSACTION_READ_COMMITTED)
+          .batchSize(BATCH_SIZE)
+          .onSuccess(rows -> log.info("Batch insert items executed, inserted {} records", rows.length))
+          .onFailure(throwable -> log.error("Batch insert items failed: {}", throwable.getMessage()))
+          .execute();
+}
+```
 
 ### 3-paginated-queries
 
 
 
 ### 4-materialized-views
+
+
 
 ## Best Practices
 ### Performance Optimization
