@@ -15,6 +15,7 @@
     - [Batch Processing](#2-batch-operations)
     - [Pagination](#3-paginated-queries)
     - [Materialized Views](#4-materialized-views)
+    - [SUPER type](#5-SUPER-type)
 - [Best Practices](#best-practices)
 - [API Reference](#api-reference)
 - [Limitations](#limitations) 
@@ -727,6 +728,8 @@ public void updateMv(){
 - Atualização materialized-view após um evento confirmado de venda:
 - Obs: Ao atualizar uma materialized-view via código, certifique-se que apenas uma instância da sua aplicação está executando o REFRESH MATERIALIZED VIEW. Execuções simultâneas podem gerar lentidão e aumentar desnecessáriamente o consumo de recursos do redshift. Para garantir que apenas uma instância execute é possível usar ShedLock.
 ```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
 public void handleUpdateMaterializedView(String mvName){
         log.info("Update Materialized View event received: {}", mvName);
 
@@ -743,6 +746,107 @@ public void handleUpdateMaterializedView(String mvName){
     }
 ```
 
+### 5-SUPER-type
+#### en-US - Working with SUPER type
+The SUPER type stores semi-structured data or documents with values. It is common for the data to be structured in Parquet, JSON, CSV. If you are using an automatic ID generator such as the IDENTIFIER function, a distinct ID will be generated for each 1MB file and grouped together.
+#### pt-BR - Trabalhando com tipo SUPER
+O tipo SUPER armazena dados semiestruturados ou documentos com valores. É comum que os dados sejam estruturados em Parquet, JSON, CSV. Caso esteja usando um gerador automático de ID como a função IDENTIFIER, para cada 1MB de arquivo será gerado uma identificação distinta e agrupados.
+
+- Inserindo dados em Tipo SUPER:
+```Java
+//Hypothetical entity
+@Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@Table(name = "log_sales")
+public class logSales {
+
+  @Id
+  @GeneratedValue(generator = "id-generator")
+  @GenericGenerator(name = "id-generator", type = IdGeneratorThreadSafe.class)
+  private Long id;
+
+  @JdbcTypeCode(value = SqlTypes.JSON)
+  @Column(name = "log_changes", columnDefinition = "SUPER")
+  private String log_changes;
+
+  @JsonAlias("created_at")
+  @Column(name = "created_at")
+  private OffsetDateTime createdAt;
+
+  @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+  @JoinColumn(name="order_id", nullable = false)
+  private Order order;
+  
+}
+```
+
+- Insert:
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+
+private final ObjectMapper mapper = (new ObjectMapper()).findAndRegisterModules();
+
+public void registerOrderLogs(Order order, Object logs){
+  var id = new IdGeneratorThreadSafe().generate();
+  var queryOrderLogs = """
+          insert
+              into
+                  log_sales
+                  (id, log_changes, created_at, order_id)
+              values
+                  (?,JSON_PARSE(?),?,?)
+          """;
+
+  redshiftPool
+          .jdbcUpdate()
+          .query(queryOrderLogs)
+          .parameters(ps -> {
+            ps.setLong(1, (Long) id);
+            ps.setString(2, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(logs));
+            ps.setTimestamp(3, Timestamp.valueOf(OffsetDateTime.now()));
+            ps.setLong(4, order.getId());
+          })
+          .onSuccess(rows -> log.info("Inserido com sucesso: {} affected rows", rows))
+          .onFailure(throwable -> log.error("Erro ao inserir log de pedidos: {}", throwable.getMessage()))
+          .execute();
+}
+```
+- Select:
+- Obs: Consulta usando um atributo dentro de campos SUPER (json) como critério.
+```Java
+private final RedshiftFunctionalJdbc redshiftPool;
+@PersistenceContext
+private EntityManager entityManager;
+
+public List<logSales> findLogsByItem(String item){
+  var query = """
+          select
+                  ls.*
+              from
+                  log_sales ls
+              inner join
+                  order o
+                      on o.id = ls.order_id
+              where
+                  JSON_EXTRACT_PATH_TEXT(JSON_SERIALIZE(log_changes), 'order', 'item') = ?
+          """;
+
+  return redshiftPool
+          .jdbcQuery()
+          .query(query)
+          .parameters(ps -> ps.setString(1, item))
+          .executeQuery(rs -> logSales.builder()
+                  .order(entityManager.getReference(Order.class, rs.getLong("order_id")))
+                  .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
+                  .changes(rs.getString("log_changes"))
+                  .id(rs.getLong("id"))
+                  .build());
+}
+```
 
 ## Best Practices
 ### Performance Optimization
