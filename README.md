@@ -617,6 +617,62 @@ public Page<Catalog> getCatalogPage(Long orderId, Integer pageSize, Integer page
                     .build());
 }
 ```
+#### en-US - Pagination with filters
+#### pt-BR - Paginação com filtros
+
+```Java
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
+
+import static java.util.Objects.nonNull;
+
+//... Service Class
+
+private final RedshiftFunctionalJdbc redshiftPool;
+
+public Page<Catalog> getCatalogPage(Long orderId, String identification, LocalDateTime initialDate, LocalDateTime finalDate,
+Integer pageSize, Integer pageIndex) {
+
+  var pagedQuery = new StringBuilder("""
+          select
+              c.id,
+              c.order_id,
+              c.created_at,
+              c.updated_at
+              c.order_completion_date,
+              c.order_date,
+              c.identification
+          from
+              catalog c
+          where
+              c.order_id=?
+          """);
+  
+  var attributes = new ArrayList<>();
+  attributes.add(orderId);
+
+  if (identification != null) {
+    pagedQuery.append(" AND c.identification=?");
+    attributes.add(identification);
+  }
+  if (nonNull(initialDate)) {
+    pagedQuery.append(" AND c.created_at BETWEEN ? AND ?");
+    attributes.add(initialDate.with(LocalTime.MIN));
+    attributes.add(nonNull(finalDate) ? finalDate.with((LocalTime.MAX)) : LocalDateTime.now().with(LocalTime.MAX));
+  }
+
+  return redshiftPool
+          .jdbcQueryPage()
+          .query(pagedQuery.toString())
+          .parameters(attributes)
+          .pageSize(pageSize)
+          .pageIndex(pageIndex)
+          .sort(Sort.by("created_at").descending())
+          .executePagedQuery(Catalog.class);
+}
+
+```
+
 
 ### 4-materialized-views
 
