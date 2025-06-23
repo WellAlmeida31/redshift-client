@@ -97,10 +97,10 @@ dependencies {
 
 ### 1. Basic CRUD Operations
 #### en-US - Insert with generated ID:
-AWS Redshift works with many parallel processes, but it cannot immediately return the automatically generated ID in the database through functions such as IDENTITY. Therefore, the best strategy, especially when using Hibernate, would be to generate the ID on the backend side and send it in the insert statements. (This library has classes for safely generating 64-bit and 53-bit Long numeric IDs. Note: JavaScript frameworks do not correctly display 64-bit Long numbers on the screen)
+AWS Redshift works with many parallel processes, but it cannot immediately return the automatically generated ID in the database through functions such as IDENTITY (The RETURNING statement cannot be used with INSERT, UPDATE, or DELETE). Therefore, the best strategy, especially when using Hibernate, would be to generate the ID on the backend side and send it in the insert statements. (This library has classes for safely generating 64-bit and 53-bit Long numeric IDs. Note: JavaScript frameworks do not correctly display 64-bit Long numbers on the screen)
 
 #### pt-BR - Insert com ID gerado:
-O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver imediatamente o id gerado automaticamente no banco de dados através de funções como IDENTITY. Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruções de insert. (Esta biblioteca possui classes para geração segura de IDs numéricos Long de 64 e 53 bits. Obs: Frameworks JavaScript não apresentam corretamente em tela números Long 64 bits)
+O AWS Redshift trabalha com muitos processos paralelos, mas não consegue devolver imediatamente o id gerado automaticamente no banco de dados através de funções como IDENTITY (A instrução RETURNING não pode ser usada com INSERT, UPDATE ou DELETE). Por isso, a melhor estratégia, principalmente quando usamos o Hibernate, seria gerar o ID no lado backend e enviá-lo nas instruções de insert. (Esta biblioteca possui classes para geração segura de IDs numéricos Long de 64 e 53 bits. Obs: Frameworks JavaScript não apresentam corretamente em tela números Long 64 bits)
 
 - @Autowired or @RequiredArgsConstructor
 ```Java
@@ -529,7 +529,7 @@ public class Catalog {
   @Column(name = "created_at")
   private OffsetDateTime createdAt;
 
-  @PrePersist
+  @PrePersist  //Only for persistence with hibernate
   private void prePersist(){
     createdAt = OffsetDateTime.now();
   }
@@ -577,6 +577,8 @@ public Page<Catalog> getCatalogPage(Long orderId, Integer pageSize, Integer page
 }
 ```
 #### en-US - Pagination with manual mapping and entity reference
+- Use manual mapping when you need to implement specific logic in assembling the returned object.
+- The automatic serialization of this API already has handling for nulls, dates, camel case and empty properties.
 #### pt-BR - Paginação com mapeamento manual e referência de entidade
 
 - Use o mapeamento manual quando necessitar implementar uma lógica específica na montagem do objeto retornado.
@@ -748,9 +750,9 @@ public void handleUpdateMaterializedView(String mvName){
 
 ### 5-SUPER-type
 #### en-US - Working with SUPER type
-The SUPER type stores semi-structured data or documents with values. It is common for the data to be structured in Parquet, JSON, CSV. If you are using an automatic ID generator such as the IDENTIFIER function, a distinct ID will be generated for each 1MB file and grouped together.
+The SUPER type stores semi-structured data or documents with values. It is common for the data to be structured in Parquet, JSON, CSV. If you are using an automatic ID generator such as the IDENTITY()  function, a distinct ID will be generated for each 1MB file and grouped together.
 #### pt-BR - Trabalhando com tipo SUPER
-O tipo SUPER armazena dados semiestruturados ou documentos com valores. É comum que os dados sejam estruturados em Parquet, JSON, CSV. Caso esteja usando um gerador automático de ID como a função IDENTIFIER, para cada 1MB de arquivo será gerado uma identificação distinta e agrupados.
+O tipo SUPER armazena dados semiestruturados ou documentos com valores. É comum que os dados sejam estruturados em Parquet, JSON, CSV. Caso esteja usando um gerador automático de ID como a função IDENTITY(), para cada 1MB de arquivo será gerado uma identificação distinta e agrupados.
 
 - Inserindo dados em Tipo SUPER:
 ```Java
@@ -818,6 +820,8 @@ public void registerOrderLogs(Order order, Object logs){
 - Select:
 - Obs: Consulta usando um atributo dentro de campos SUPER (json) como critério.
 ```Java
+//Query using an attribute within SUPER (json) fields as criteria.
+
 private final RedshiftFunctionalJdbc redshiftPool;
 @PersistenceContext
 private EntityManager entityManager;
